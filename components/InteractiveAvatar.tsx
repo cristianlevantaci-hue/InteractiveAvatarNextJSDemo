@@ -1,6 +1,12 @@
 import {
   AvatarQuality,
   StreamingEvents,
+  TaskType,  // <--- AGGIUNGI QUESTO
+  // ... lascia gli altri come sono
+} from "@heygen/streaming-avatar";
+import {
+  AvatarQuality,
+  StreamingEvents,
   VoiceChatTransport,
   VoiceEmotion,
   StartAvatarRequest,
@@ -85,9 +91,32 @@ function InteractiveAvatar() {
       avatar.on(StreamingEvents.USER_STOP, (event) => {
         console.log(">>>>> User stopped talking:", event);
       });
-      avatar.on(StreamingEvents.USER_END_MESSAGE, (event) => {
-        console.log(">>>>> User end message:", event);
-      });
+      avatar.on(StreamingEvents.USER_END_MESSAGE, async (event) => {
+    console.log(">>>>> Utente ha detto:", event.detail.message);
+
+    try {
+        // 1. Chiediamo la risposta a Voiceflow (tramite il nostro file route.ts)
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: event.detail.message })
+        });
+
+        // 2. Otteniamo il testo della risposta
+        const voiceflowReply = await response.text();
+        console.log(">>>>> Voiceflow risponde:", voiceflowReply);
+
+        // 3. Facciamo parlare l'avatar
+        if (voiceflowReply) {
+            await avatar.speak({ 
+                text: voiceflowReply, 
+                task_type: TaskType.REPEAT 
+            });
+        }
+    } catch (e) {
+        console.error("Errore nel parlare con Voiceflow:", e);
+    }
+  });
       avatar.on(StreamingEvents.USER_TALKING_MESSAGE, (event) => {
         console.log(">>>>> User talking message:", event);
       });
@@ -105,9 +134,6 @@ function InteractiveAvatar() {
         quality: AvatarQuality.High,
       });
 
-      if (isVoiceChat) {
-        await startVoiceChat();
-      }
     } catch (error) {
       console.error("Error starting avatar session:", error);
     }
