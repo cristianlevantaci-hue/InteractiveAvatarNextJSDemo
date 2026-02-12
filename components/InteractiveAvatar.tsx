@@ -1,3 +1,4 @@
+TypeScript
 import {
   AvatarQuality,
   StreamingEvents,
@@ -21,7 +22,7 @@ import { MessageHistory } from "./AvatarSession/MessageHistory";
 // --- CONFIGURAZIONE ---
 const DEFAULT_CONFIG: StartAvatarRequest = {
   quality: AvatarQuality.High,
-  avatarName: "19deca1e52b6457d82412bd5fd5216c3", // IL TUO ID AVATAR
+  avatarName: "19deca1e52b6457d82412bd5fd5216c3", // IL TUO ID
   knowledgeId: undefined, 
   voice: {
     rate: 1.0, 
@@ -35,7 +36,8 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
 };
 
 function InteractiveAvatar() {
-  // CORREZIONE QUI: Ho rimosso 'avatar' dalla lista perché dava errore
+  // CORREZIONE EFFETTUATA QUI SOTTO:
+  // Ho rimosso "avatar" da questa lista perché causava l'errore.
   const { initAvatar, startAvatar, stopAvatar, sessionState, stream } =
     useStreamingAvatarSession();
 
@@ -58,7 +60,7 @@ function InteractiveAvatar() {
   const startSessionV2 = useMemoizedFn(async () => {
     try {
       const newToken = await fetchAccessToken();
-      // Qui catturiamo l'avatar appena creato
+      // CATTURIAMO L'AVATAR QUI, SUBITO DOPO AVERLO INIZIALIZZATO
       const newAvatar = initAvatar(newToken); 
 
       // --- EVENTI ---
