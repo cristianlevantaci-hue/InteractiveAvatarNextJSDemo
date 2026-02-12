@@ -35,7 +35,7 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
 };
 
 function InteractiveAvatar() {
-  // RIGA 38 CORRETTA: Nota che la parola 'avatar' NON C'È PIÙ qui sotto.
+  //
   const { initAvatar, startAvatar, stopAvatar, sessionState, stream } = 
     useStreamingAvatarSession();
 
