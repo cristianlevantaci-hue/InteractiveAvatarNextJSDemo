@@ -1,4 +1,3 @@
-TypeScript
 import {
   AvatarQuality,
   StreamingEvents,
@@ -36,9 +35,8 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
 };
 
 function InteractiveAvatar() {
-  // CORREZIONE EFFETTUATA QUI SOTTO:
-  // Ho rimosso "avatar" da questa lista perché causava l'errore.
-  const { initAvatar, startAvatar, stopAvatar, sessionState, stream } =
+  // RIGA 38 CORRETTA: Nota che la parola 'avatar' NON C'È PIÙ qui sotto.
+  const { initAvatar, startAvatar, stopAvatar, sessionState, stream } = 
     useStreamingAvatarSession();
 
   const [config, setConfig] = useState<StartAvatarRequest>(DEFAULT_CONFIG);
@@ -60,7 +58,7 @@ function InteractiveAvatar() {
   const startSessionV2 = useMemoizedFn(async () => {
     try {
       const newToken = await fetchAccessToken();
-      // CATTURIAMO L'AVATAR QUI, SUBITO DOPO AVERLO INIZIALIZZATO
+      // ECCO IL TRUCCO: L'avatar lo creiamo qui e lo chiamiamo 'newAvatar'
       const newAvatar = initAvatar(newToken); 
 
       // --- EVENTI ---
