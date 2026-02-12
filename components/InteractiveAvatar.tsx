@@ -98,7 +98,12 @@ function InteractiveAvatar() {
         console.log(">>>>> Avatar end message:", event);
       });
 
-      await startAvatar(config);
+      // FORZATURA MANUALE DELL'AVATAR
+      await startAvatar({
+        ...config, // Mantieni le altre impostazioni (lingua, voce)
+        avatarName: "19deca1e52b6457d82412bd5fd5216c3", // IL TUO ID CUSTOM
+        quality: AvatarQuality.High,
+      });
 
       if (isVoiceChat) {
         await startVoiceChat();
