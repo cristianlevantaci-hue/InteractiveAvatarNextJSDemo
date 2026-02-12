@@ -24,7 +24,7 @@ import { AVATARS } from "@/app/lib/constants";
 
 const DEFAULT_CONFIG: StartAvatarRequest = {
   quality: AvatarQuality.High, // Metti High per vedere meglio sul 32 pollici
-  avatarName: "INCOLLA_QUI_IL_TUO_AVATAR_ID", // <--- 1. Cancella AVATARS[0]... e metti il tuo ID tra virgolette
+  avatarName: "19deca1e52b6457d82412bd5fd5216c3", // <--- 1. Cancella AVATARS[0]... e metti il tuo ID tra virgolette
   knowledgeId: undefined, 
   voice: {
     rate: 1.0, // <--- 2. Metti 1.0 (1.5 è troppo veloce per l'italiano)
