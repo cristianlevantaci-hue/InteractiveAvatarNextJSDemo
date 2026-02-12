@@ -5,7 +5,7 @@ import {
   VoiceEmotion,
   StartAvatarRequest,
   STTProvider,
-  TaskType, // Importante per far parlare l'avatar
+  TaskType,
 } from "@heygen/streaming-avatar";
 import { useEffect, useRef, useState } from "react";
 import { useMemoizedFn, useUnmount } from "ahooks";
@@ -18,10 +18,10 @@ import { StreamingAvatarProvider, StreamingAvatarSessionState } from "./logic";
 import { LoadingIcon } from "./Icons";
 import { MessageHistory } from "./AvatarSession/MessageHistory";
 
-// --- CONFIGURAZIONE INIZIALE ---
+// --- CONFIGURAZIONE ---
 const DEFAULT_CONFIG: StartAvatarRequest = {
   quality: AvatarQuality.High,
-  avatarName: "19deca1e52b6457d82412bd5fd5216c3", // IL TUO ID
+  avatarName: "19deca1e52b6457d82412bd5fd5216c3", // IL TUO ID AVATAR
   knowledgeId: undefined, 
   voice: {
     rate: 1.0, 
@@ -35,14 +35,15 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
 };
 
 function InteractiveAvatar() {
-  const { initAvatar, startAvatar, stopAvatar, sessionState, stream, avatar } =
+  // CORREZIONE QUI: Ho rimosso 'avatar' dalla lista perché dava errore
+  const { initAvatar, startAvatar, stopAvatar, sessionState, stream } =
     useStreamingAvatarSession();
 
   const [config, setConfig] = useState<StartAvatarRequest>(DEFAULT_CONFIG);
   const mediaStream = useRef<HTMLVideoElement>(null);
   const [isTalking, setIsTalking] = useState(false);
 
-  // --- RECUPERO TOKEN ---
+  // --- TOKEN ---
   async function fetchAccessToken() {
     try {
       const response = await fetch("/api/get-access-token", { method: "POST" });
@@ -57,12 +58,11 @@ function InteractiveAvatar() {
   const startSessionV2 = useMemoizedFn(async () => {
     try {
       const newToken = await fetchAccessToken();
-      // Inizializza l'avatar
+      // Qui catturiamo l'avatar appena creato
       const newAvatar = initAvatar(newToken); 
 
       // --- EVENTI ---
-      
-      // 1. QUANDO L'UTENTE FINISCE DI PARLARE -> Manda a Voiceflow
+      // 1. QUANDO L'UTENTE FINISCE DI PARLARE
       newAvatar.on(StreamingEvents.USER_END_MESSAGE, async (event) => {
         const userText = event.detail.message;
         console.log(">>>>> Utente ha detto:", userText);
@@ -70,7 +70,7 @@ function InteractiveAvatar() {
         if (!userText) return;
 
         try {
-          // Chiama il nostro server (route.ts) che parla con Voiceflow
+          // Chiamiamo Voiceflow
           const response = await fetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -80,7 +80,7 @@ function InteractiveAvatar() {
           const botReply = await response.text();
           console.log(">>>>> Voiceflow risponde:", botReply);
 
-          // Fai parlare l'avatar con la risposta
+          // Facciamo parlare l'avatar
           if (botReply) {
              await newAvatar.speak({ 
                 text: botReply, 
@@ -92,18 +92,17 @@ function InteractiveAvatar() {
         }
       });
 
-      // 2. Eventi di stato (opzionali per debug)
+      // 2. Altri eventi
       newAvatar.on(StreamingEvents.AVATAR_START_TALKING, () => setIsTalking(true));
       newAvatar.on(StreamingEvents.AVATAR_STOP_TALKING, () => setIsTalking(false));
       
       // --- START ---
-      // Avvia il video dell'avatar
       await startAvatar({
           ...config,
           avatarName: "19deca1e52b6457d82412bd5fd5216c3", // Forza ID
       });
 
-      // Avvia il microfono (SENZA logica OpenAI, solo ascolto)
+      // Avvia ascolto
       await newAvatar.startVoiceChat({ useSilencePrompt: false });
 
     } catch (error) {
@@ -131,19 +130,23 @@ function InteractiveAvatar() {
           {sessionState !== StreamingAvatarSessionState.INACTIVE ? (
             <AvatarVideo ref={mediaStream} />
           ) : (
-            <div className="p-10 text-white">Pronto per iniziare</div>
+            <div className="p-10 text-white text-center">
+              <h2 className="text-2xl font-bold mb-2">Totem Villaggio</h2>
+              <p>Clicca Avvia per parlare</p>
+            </div>
           )}
         </div>
         <div className="flex flex-col gap-3 items-center justify-center p-4 border-t border-zinc-700 w-full">
           {sessionState === StreamingAvatarSessionState.INACTIVE ? (
-            <Button onClick={startSessionV2}>
-              Avvia Totem Villaggio
+            <Button onClick={startSessionV2} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-xl rounded-full">
+              Avvia Conversazione
             </Button>
           ) : (
-             <div className="text-white">
-                {isTalking ? "Sto parlando..." : "Ti ascolto (Parla ora)"}
-                <br/>
-                <Button onClick={() => stopAvatar()} className="bg-red-500 mt-2">Termina</Button>
+             <div className="text-white text-center">
+                <p className="mb-2 text-lg">{isTalking ? "🔊 Sto parlando..." : "👂 Ti ascolto..."}</p>
+                <Button onClick={() => stopAvatar()} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                  Termina
+                </Button>
              </div>
           )}
         </div>
