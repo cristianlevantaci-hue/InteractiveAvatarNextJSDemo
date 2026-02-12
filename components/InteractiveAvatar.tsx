@@ -23,15 +23,14 @@ import { MessageHistory } from "./AvatarSession/MessageHistory";
 import { AVATARS } from "@/app/lib/constants";
 
 const DEFAULT_CONFIG: StartAvatarRequest = {
-  quality: AvatarQuality.Low,
-  avatarName: AVATARS[0].avatar_id,
-  knowledgeId: undefined,
+  quality: AvatarQuality.High, // Metti High per vedere meglio sul 32 pollici
+  avatarName: "INCOLLA_QUI_IL_TUO_AVATAR_ID", // <--- 1. Cancella AVATARS[0]... e metti il tuo ID tra virgolette
+  knowledgeId: undefined, 
   voice: {
-    rate: 1.5,
-    emotion: VoiceEmotion.EXCITED,
-    model: ElevenLabsModel.eleven_flash_v2_5,
+    rate: 1.0, // <--- 2. Metti 1.0 (1.5 è troppo veloce per l'italiano)
+    emotion: VoiceEmotion.FRIENDLY, // Usa FRIENDLY o EXCITED
   },
-  language: "en",
+  language: "it", // <--- 3. Metti "it" invece di "en" per l'italiano
   voiceChatTransport: VoiceChatTransport.WEBSOCKET,
   sttSettings: {
     provider: STTProvider.DEEPGRAM,
