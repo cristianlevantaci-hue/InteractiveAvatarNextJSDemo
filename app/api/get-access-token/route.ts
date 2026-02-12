@@ -26,7 +26,6 @@ export async function POST(req: Request) {
       headers: {
         'Authorization': apiKey,
         'Content-Type': 'application/json',
-        'versionID': 'production' // Usa 'production' o togli questa riga per usare l'ultima versione
       },
       body: JSON.stringify({
         action: {
