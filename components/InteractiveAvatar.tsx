@@ -1,3 +1,4 @@
+// VERSIONE DEFINITIVA V5 - FIX REMOVED AVATAR PROPERTY
 import {
   AvatarQuality,
   StreamingEvents,
@@ -19,7 +20,7 @@ import { LoadingIcon } from "./Icons";
 import { MessageHistory } from "./AvatarSession/MessageHistory";
 
 // --- TUE CONFIGURAZIONI ---
-const YOUR_AVATAR_ID = "19deca1e52b6457d82412bd5fd5216c3"; // Il tuo ID copiato da HeyGen
+const YOUR_AVATAR_ID = "19deca1e52b6457d82412bd5fd5216c3"; 
 
 const DEFAULT_CONFIG: StartAvatarRequest = {
   quality: AvatarQuality.High,
@@ -37,7 +38,7 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
 };
 
 function InteractiveAvatar() {
-  // RIGA 38 FIXATA: Qui sotto NON c'è la parola 'avatar'
+  // RIGA CRITICA CORRETTA:
   const { initAvatar, startAvatar, stopAvatar, sessionState, stream } = 
     useStreamingAvatarSession();
 
@@ -69,12 +70,9 @@ function InteractiveAvatar() {
       }
 
       setDebugMsg("Inizializzazione Avatar...");
-      // QUI CATTURIAMO L'ISTANZA DELL'AVATAR
       const newAvatar = await initAvatar(newToken); 
 
       // --- EVENTI ---
-      
-      // 1. QUANDO L'UTENTE FINISCE DI PARLARE -> Manda a Voiceflow
       newAvatar.on(StreamingEvents.USER_END_MESSAGE, async (event) => {
         const userText = event.detail.message;
         console.log(">>>>> Utente ha detto:", userText);
@@ -83,7 +81,6 @@ function InteractiveAvatar() {
         if (!userText) return;
 
         try {
-          // Chiamiamo Voiceflow
           const response = await fetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -94,7 +91,6 @@ function InteractiveAvatar() {
           console.log(">>>>> Voiceflow risponde:", botReply);
           setDebugMsg("VF risponde: " + botReply);
 
-          // Facciamo parlare l'avatar
           if (botReply) {
              await newAvatar.speak({ 
                 text: botReply, 
@@ -107,7 +103,6 @@ function InteractiveAvatar() {
         }
       });
 
-      // 2. Altri eventi per l'interfaccia
       newAvatar.on(StreamingEvents.AVATAR_START_TALKING, () => setIsTalking(true));
       newAvatar.on(StreamingEvents.AVATAR_STOP_TALKING, () => setIsTalking(false));
       newAvatar.on(StreamingEvents.STREAM_READY, () => setDebugMsg("Stream Pronto!"));
@@ -116,10 +111,9 @@ function InteractiveAvatar() {
       setDebugMsg("Avvio Video...");
       await startAvatar({
           ...config,
-          avatarName: YOUR_AVATAR_ID, // Forza ID
+          avatarName: YOUR_AVATAR_ID, 
       });
 
-      // Avvia ascolto
       setDebugMsg("Avvio Microfono...");
       await newAvatar.startVoiceChat({ useSilencePrompt: false });
 
@@ -156,7 +150,6 @@ function InteractiveAvatar() {
           )}
         </div>
         
-        {/* BARRA DI CONTROLLO IN BASSO */}
         <div className="flex flex-col gap-3 items-center justify-center p-4 border-t border-zinc-700 w-full bg-black">
           {sessionState === StreamingAvatarSessionState.INACTIVE ? (
             <Button 
@@ -170,7 +163,6 @@ function InteractiveAvatar() {
                 <p className="mb-2 text-lg font-mono text-yellow-400">
                   {isTalking ? "🔊 Sto parlando..." : "👂 Ti ascolto..."}
                 </p>
-                {/* Mostra piccoli messaggi di debug per capire cosa succede */}
                 <p className="text-xs text-gray-500 mb-4">{debugMsg}</p>
                 
                 <Button onClick={() => stopAvatar()} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg">
