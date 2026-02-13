@@ -2,111 +2,81 @@ import {
   AvatarQuality,
   StreamingEvents,
   VoiceChatTransport,
-  VoiceEmotion,
   StartAvatarRequest,
-  STTProvider,
-  TaskType,
 } from "@heygen/streaming-avatar";
 import { useEffect, useRef, useState } from "react";
 import { useMemoizedFn, useUnmount } from "ahooks";
 import { Button } from "./Button";
-import { AvatarConfig } from "./AvatarConfig";
 import { AvatarVideo } from "./AvatarSession/AvatarVideo";
 import { useStreamingAvatarSession } from "./logic/useStreamingAvatarSession";
-import { AvatarControls } from "./AvatarSession/AvatarControls";
 import { StreamingAvatarProvider, StreamingAvatarSessionState } from "./logic";
-import { LoadingIcon } from "./Icons";
-import { MessageHistory } from "./AvatarSession/MessageHistory";
 
-// --- CONFIGURAZIONE ---
+// --- CONFIGURAZIONE MINIMALE ---
+// Usiamo "Silas" che funziona su tutti i piani, senza impostazioni complesse
 const DEFAULT_CONFIG: StartAvatarRequest = {
-  quality: AvatarQuality.Low, // Manteniamo Low per velocità
-  avatarName: "ef08039a41354ed5a20565db899373f3", // Usiamo Monika (Standard) per il test
-  // knowledgeId: undefined, // RIMOSSO: A volte crea conflitti se undefined
-  // voice: { ... } // RIMOSSO: Le emozioni causano spesso errore 400
-  // language: "it", // RIMOSSO: Proviamo prima in Inglese per vedere se parte
+  quality: AvatarQuality.Low,
+  avatarName: "2c54f98a1a3641778947b19888916298", // ID di Silas (Standard)
+  voiceChatTransport: VoiceChatTransport.WEBSOCKET,
+  // Rimosso STT (Deepgram), Rimosso Language, Rimosso Emotion
 };
 
 function InteractiveAvatar() {
   const { initAvatar, startAvatar, stopAvatar, sessionState, stream } = 
     useStreamingAvatarSession();
 
-  const [config, setConfig] = useState<StartAvatarRequest>(DEFAULT_CONFIG);
   const mediaStream = useRef<HTMLVideoElement>(null);
-  const [isTalking, setIsTalking] = useState(false);
   const [debug, setDebug] = useState("Pronto.");
 
-  // --- TOKEN ---
+  // Funzione per prendere il token
   async function fetchAccessToken() {
     try {
       const response = await fetch("/api/get-access-token", { method: "POST" });
-      return await response.text();
+      const token = await response.text();
+      // Controllo di sicurezza: se il token è un errore, lo mostriamo
+      if (token.includes("Error") || token.includes("error")) {
+        throw new Error("Token non valido: " + token);
+      }
+      return token;
     } catch (error) {
       console.error("Error fetching token:", error);
+      setDebug("Errore Token: " + error);
       return "";
     }
   }
 
-  // --- AVVIO SESSIONE ---
   const startSessionV2 = useMemoizedFn(async () => {
     try {
       setDebug("Richiedo Token...");
       const newToken = await fetchAccessToken();
       
+      if (!newToken) return; // Ci fermiamo se non c'è il token
+
       setDebug("Creo Avatar...");
       const newAvatar = await initAvatar(newToken); 
 
       // --- EVENTI ---
+      newAvatar.on(StreamingEvents.STREAM_READY, () => {
+        setDebug("Stream Pronto! (Parla ora)");
+      });
+
       newAvatar.on(StreamingEvents.USER_END_MESSAGE, async (event) => {
-        const userText = event.detail.message;
-        console.log(">>>>> Utente ha detto:", userText);
-        setDebug("Utente: " + userText);
-
-        if (!userText) return;
-
-        try {
-          const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: userText })
-          });
-          
-          const botReply = await response.text();
-          console.log(">>>>> Voiceflow risponde:", botReply);
-          setDebug("Risposta: " + botReply);
-
-          if (botReply) {
-             await newAvatar.speak({ 
-                text: botReply, 
-                task_type: TaskType.REPEAT 
-             });
-          }
-        } catch (e) {
-          console.error("Errore Voiceflow:", e);
-          setDebug("Errore connessione AI");
-        }
+        console.log(">>>>> Utente:", event.detail.message);
+        // Qui ci andrà Voiceflow dopo, prima testiamo se parte
       });
-
-      newAvatar.on(StreamingEvents.AVATAR_START_TALKING, () => setIsTalking(true));
-      newAvatar.on(StreamingEvents.AVATAR_STOP_TALKING, () => setIsTalking(false));
       
-      // --- START ---
       setDebug("Avvio Video...");
-      await startAvatar({
-          ...config,
-          avatarName: "19deca1e52b6457d82412bd5fd5216c3", 
-      });
+      // Avviamo SENZA configurazioni extra
+      await startAvatar(DEFAULT_CONFIG);
 
       setDebug("Avvio Microfono...");
-      // CORREZIONE QUI: Ho rimosso l'argomento che dava errore.
-      // Ora chiamiamo la funzione vuota, che accende il microfono di default.
       await newAvatar.startVoiceChat(); 
       
-      setDebug("Parla pure!");
+      setDebug("Tutto attivo! Parla.");
 
     } catch (error) {
       console.error("Error starting session:", error);
-      setDebug("Errore Avvio: " + error);
+      // Mostriamo l'errore completo a schermo
+      setDebug("Errore Start: " + (error as any).message); 
     }
   });
 
@@ -132,21 +102,18 @@ function InteractiveAvatar() {
           ) : (
             <div className="p-10 text-white text-center">
               <h2 className="text-2xl font-bold mb-2">Totem Villaggio</h2>
-              <p>Clicca Avvia per parlare</p>
+              <p>Clicca Avvia per testare</p>
             </div>
           )}
         </div>
         <div className="flex flex-col gap-3 items-center justify-center p-4 border-t border-zinc-700 w-full bg-black">
           {sessionState === StreamingAvatarSessionState.INACTIVE ? (
             <Button onClick={startSessionV2} className="bg-blue-600 text-white px-8 py-4 rounded-xl text-xl font-bold">
-              AVVIA TOTEM
+              AVVIA TEST SILAS
             </Button>
           ) : (
              <div className="text-white text-center w-full">
-                <p className="text-yellow-400 font-mono text-lg mb-2">
-                    {isTalking ? "🔊 Sto parlando..." : "👂 Ti ascolto..."}
-                </p>
-                <p className="text-xs text-gray-500 mb-4">{debug}</p>
+                <p className="text-xs text-gray-400 mb-4 font-mono">{debug}</p>
                 <Button onClick={() => stopAvatar()} className="bg-red-600 px-4 py-2 rounded text-white">
                   Termina
                 </Button>
