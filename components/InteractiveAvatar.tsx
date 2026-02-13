@@ -35,7 +35,6 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
 };
 
 function InteractiveAvatar() {
-  // QUESTA È LA RIGA CORRETTA (Senza 'avatar')
   const { initAvatar, startAvatar, stopAvatar, sessionState, stream } = 
     useStreamingAvatarSession();
 
@@ -106,7 +105,10 @@ function InteractiveAvatar() {
       });
 
       setDebug("Avvio Microfono...");
-      await newAvatar.startVoiceChat({ useSilencePrompt: false });
+      // CORREZIONE QUI: Ho rimosso l'argomento che dava errore.
+      // Ora chiamiamo la funzione vuota, che accende il microfono di default.
+      await newAvatar.startVoiceChat(); 
+      
       setDebug("Parla pure!");
 
     } catch (error) {
