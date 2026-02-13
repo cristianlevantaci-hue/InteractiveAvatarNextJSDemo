@@ -11,13 +11,15 @@ import { AvatarVideo } from "./AvatarSession/AvatarVideo";
 import { useStreamingAvatarSession } from "./logic/useStreamingAvatarSession";
 import { StreamingAvatarProvider, StreamingAvatarSessionState } from "./logic";
 
-// --- CONFIGURAZIONE MINIMALE ---
-// Usiamo "Silas" che funziona su tutti i piani, senza impostazioni complesse
+// --- CONFIGURAZIONE ANGELA (UFFICIALE) ---
+// Questo ID appartiene ad "Angela-in-T-shirt", l'avatar di default per i test
+const AVATAR_ID_ANGELA = "35b3e6e580e0473a870d075253896504";
+
 const DEFAULT_CONFIG: StartAvatarRequest = {
   quality: AvatarQuality.Low,
-  avatarName: "2c54f98a1a3641778947b19888916298", // ID di Silas (Standard)
+  avatarName: AVATAR_ID_ANGELA, 
   voiceChatTransport: VoiceChatTransport.WEBSOCKET,
-  // Rimosso STT (Deepgram), Rimosso Language, Rimosso Emotion
+  // Nessuna voce, nessuna lingua: lasciamo i default
 };
 
 function InteractiveAvatar() {
@@ -27,56 +29,59 @@ function InteractiveAvatar() {
   const mediaStream = useRef<HTMLVideoElement>(null);
   const [debug, setDebug] = useState("Pronto.");
 
-  // Funzione per prendere il token
+  // Funzione Token
   async function fetchAccessToken() {
     try {
       const response = await fetch("/api/get-access-token", { method: "POST" });
       const token = await response.text();
-      // Controllo di sicurezza: se il token è un errore, lo mostriamo
-      if (token.includes("Error") || token.includes("error")) {
-        throw new Error("Token non valido: " + token);
-      }
       return token;
     } catch (error) {
       console.error("Error fetching token:", error);
-      setDebug("Errore Token: " + error);
       return "";
     }
   }
 
   const startSessionV2 = useMemoizedFn(async () => {
     try {
-      setDebug("Richiedo Token...");
+      setDebug("1. Richiedo Token...");
       const newToken = await fetchAccessToken();
       
-      if (!newToken) return; // Ci fermiamo se non c'è il token
+      if (!newToken || newToken.length < 10) {
+        setDebug("ERRORE: Token non valido o vuoto.");
+        return;
+      }
 
-      setDebug("Creo Avatar...");
+      setDebug("2. Token OK. Creo Sessione...");
       const newAvatar = await initAvatar(newToken); 
 
       // --- EVENTI ---
       newAvatar.on(StreamingEvents.STREAM_READY, () => {
-        setDebug("Stream Pronto! (Parla ora)");
+        setDebug(">>> STREAM PRONTO! <<<");
       });
 
       newAvatar.on(StreamingEvents.USER_END_MESSAGE, async (event) => {
         console.log(">>>>> Utente:", event.detail.message);
-        // Qui ci andrà Voiceflow dopo, prima testiamo se parte
       });
       
-      setDebug("Avvio Video...");
-      // Avviamo SENZA configurazioni extra
+      setDebug("3. Avvio Avatar Angela...");
+      
+      // TENTATIVO DI AVVIO
       await startAvatar(DEFAULT_CONFIG);
 
-      setDebug("Avvio Microfono...");
+      setDebug("4. Avvio Microfono...");
       await newAvatar.startVoiceChat(); 
       
-      setDebug("Tutto attivo! Parla.");
+      setDebug("Tutto attivo! Angela ti ascolta.");
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error starting session:", error);
-      // Mostriamo l'errore completo a schermo
-      setDebug("Errore Start: " + (error as any).message); 
+      
+      // Diagnostica dell'errore 400
+      if (error.message && error.message.includes("400")) {
+        setDebug("ERRORE 400: Probabilmente CREDITI ESAURITI su HeyGen.");
+      } else {
+        setDebug("ERRORE: " + error.message);
+      }
     }
   });
 
@@ -102,18 +107,18 @@ function InteractiveAvatar() {
           ) : (
             <div className="p-10 text-white text-center">
               <h2 className="text-2xl font-bold mb-2">Totem Villaggio</h2>
-              <p>Clicca Avvia per testare</p>
+              <p>Test Finale con Angela</p>
             </div>
           )}
         </div>
         <div className="flex flex-col gap-3 items-center justify-center p-4 border-t border-zinc-700 w-full bg-black">
           {sessionState === StreamingAvatarSessionState.INACTIVE ? (
-            <Button onClick={startSessionV2} className="bg-blue-600 text-white px-8 py-4 rounded-xl text-xl font-bold">
-              AVVIA TEST SILAS
+            <Button onClick={startSessionV2} className="bg-green-600 text-white px-8 py-4 rounded-xl text-xl font-bold">
+              AVVIA ANGELA
             </Button>
           ) : (
              <div className="text-white text-center w-full">
-                <p className="text-xs text-gray-400 mb-4 font-mono">{debug}</p>
+                <p className="text-xs text-yellow-400 mb-4 font-mono font-bold">{debug}</p>
                 <Button onClick={() => stopAvatar()} className="bg-red-600 px-4 py-2 rounded text-white">
                   Termina
                 </Button>
