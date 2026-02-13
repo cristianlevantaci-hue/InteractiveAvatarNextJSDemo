@@ -20,8 +20,8 @@ import { MessageHistory } from "./AvatarSession/MessageHistory";
 
 // --- CONFIGURAZIONE ---
 const DEFAULT_CONFIG: StartAvatarRequest = {
-  quality: AvatarQuality.High,
-  avatarName: "19deca1e52b6457d82412bd5fd5216c3", // IL TUO ID
+  quality: AvatarQuality.Low, // <--- 1. Metti LOW per sicurezza
+  avatarName: "ef08039a41354ed5a20565db899373f3", // <--- 2. ID pubblico di prova (Monika)
   knowledgeId: undefined, 
   voice: {
     rate: 1.0, 
