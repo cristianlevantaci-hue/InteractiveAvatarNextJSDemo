@@ -20,18 +20,11 @@ import { MessageHistory } from "./AvatarSession/MessageHistory";
 
 // --- CONFIGURAZIONE ---
 const DEFAULT_CONFIG: StartAvatarRequest = {
-  quality: AvatarQuality.Low, // <--- 1. Metti LOW per sicurezza
-  avatarName: "ef08039a41354ed5a20565db899373f3", // <--- 2. ID pubblico di prova (Monika)
-  knowledgeId: undefined, 
-  voice: {
-    rate: 1.0, 
-    emotion: VoiceEmotion.FRIENDLY, 
-  },
-  language: "it", 
-  voiceChatTransport: VoiceChatTransport.WEBSOCKET,
-  sttSettings: {
-    provider: STTProvider.DEEPGRAM,
-  },
+  quality: AvatarQuality.Low, // Manteniamo Low per velocità
+  avatarName: "ef08039a41354ed5a20565db899373f3", // Usiamo Monika (Standard) per il test
+  // knowledgeId: undefined, // RIMOSSO: A volte crea conflitti se undefined
+  // voice: { ... } // RIMOSSO: Le emozioni causano spesso errore 400
+  // language: "it", // RIMOSSO: Proviamo prima in Inglese per vedere se parte
 };
 
 function InteractiveAvatar() {
